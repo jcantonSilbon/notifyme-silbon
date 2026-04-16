@@ -130,7 +130,7 @@ export function SubscriptionTable({
       itemCount={subscriptions.length}
       selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
       onSelectionChange={handleSelectionChange}
-      headings={headings}
+      headings={headings as [{ title: string }, ...{ title: string }[]]}
       loading={loading}
       emptyState={
         <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
