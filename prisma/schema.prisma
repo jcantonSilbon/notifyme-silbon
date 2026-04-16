@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Subscription {
+  id            String             @id @default(cuid())
+  shop          String             @default("silbon.myshopify.com")
+  productId     String
+  variantId     String
+  productTitle  String
+  variantTitle  String
+  email         String
+  status        SubscriptionStatus @default(PENDING)
+  productHandle String             @default("")
+  retryCount    Int                @default(0)
+  createdAt     DateTime           @default(now())
+  notifiedAt    DateTime?
+  lastAttemptAt DateTime?
+  processingAt  DateTime?          // set atomically to claim a row before sending; cleared after
+  errorMessage  String?
+
+  // Hot path: webhook handler looks up by variantId + status
+  @@index([variantId, status])
+  // Admin filters
+  @@index([productId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
+
+  // ── Deduplication strategy ───────────────────────────────────────────────
+  // Prisma does NOT support partial unique indexes natively.
+  // The real constraint lives in the migration SQL (001_init/migration.sql):
+  //
+  //   CREATE UNIQUE INDEX "unique_pending_sub"
+  //     ON "Subscription"(email, "variantId")
+  //     WHERE status = 'PENDING';
+  //
+  // This allows: same email re-subscribes to the same variant after being
+  // NOTIFIED or FAILED (common: item goes OOS again after restock).
+  // This prevents: two concurrent PENDING rows for the same email+variant.
+  //
+  // The service layer (subscriptionService.ts) has an application-level
+  // pre-check, but the DB constraint is the authoritative guard.
+  // Prisma P2002 errors from the constraint are caught and returned as
+  // { status: 'duplicate' } — see createSubscription() in subscriptionService.ts.
+}
+
+enum SubscriptionStatus {
+  PENDING
+  NOTIFIED
+  FAILED
+}
+
+model VariantCache {
+  // Maps Shopify's inventory_item_id → variant_id
+  // This mapping is immutable in Shopify (1:1, never changes)
+  // Populated at subscribe time (fire-and-forget) and on webhook cache miss
+  id              String   @id @default(cuid())
+  inventoryItemId String   @unique
+  variantId       String
+  productId       String
+  productTitle    String
+  variantTitle    String
+  updatedAt       DateTime @updatedAt
+
+  @@index([variantId])
+}

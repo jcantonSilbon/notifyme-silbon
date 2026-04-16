@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+admin-ui/node_modules/
+
+# Build output
+dist/
+admin-ui/dist/
+
+# Environment files - NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Prisma
+prisma/generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo

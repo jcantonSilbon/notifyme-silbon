@@ -1,0 +1,13 @@
+# Shopify Theme App Extension configuration
+# Deploy with: shopify app deploy
+
+api_version = "2024-10"
+
+[[extensions]]
+type = "theme"
+name = "Notify Me Block"
+handle = "notify-me-block"
+
+  [extensions.development]
+    # Preview on your development store
+    preview_url = "https://silbon.myshopify.com"

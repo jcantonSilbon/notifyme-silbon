@@ -1,0 +1,195 @@
+{% comment %}
+  Notify Me App Block
+  ──────────────────
+  Placed on the product page via the Shopify theme editor (Online Store 2.0).
+  Shows an email subscription form when the currently selected variant is out of stock.
+  Hides automatically when a variant is available (add-to-cart remains the primary CTA).
+
+  Settings:
+    - backend_url:   Full URL to the NotifyMe API (e.g. https://notifyme.vercel.app)
+    - button_text:   Label for the submit button
+    - heading_text:  Heading shown above the form
+{% endcomment %}
+
+<div
+  id="notify-me-container"
+  class="notify-me"
+  data-backend-url="{{ block.settings.backend_url }}"
+  data-product-id="{{ product.id }}"
+  data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+  data-product-title="{{ product.title | escape }}"
+  data-product-handle="{{ product.handle }}"
+  data-variant-title="{{ product.selected_or_first_available_variant.title | escape }}"
+  data-initially-available="{{ product.selected_or_first_available_variant.available }}"
+  style="display: none;"
+  aria-live="polite"
+>
+  <div class="notify-me__inner">
+    <p class="notify-me__heading">{{ block.settings.heading_text }}</p>
+
+    <form id="notify-me-form" class="notify-me__form" novalidate>
+      {{- /* Honeypot: hidden field to catch bots. Must remain empty. */ -}}
+      <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+        <label for="notify-me-honeypot">Leave this empty</label>
+        <input
+          type="text"
+          id="notify-me-honeypot"
+          name="honeypot"
+          tabindex="-1"
+          autocomplete="off"
+          value=""
+        />
+      </div>
+
+      <input type="hidden" id="notify-me-product-id" name="productId" value="{{ product.id }}" />
+      <input type="hidden" id="notify-me-product-handle" name="productHandle" value="{{ product.handle }}" />
+      <input type="hidden" id="notify-me-variant-id" name="variantId" value="{{ product.selected_or_first_available_variant.id }}" />
+      <input type="hidden" id="notify-me-product-title" name="productTitle" value="{{ product.title | escape }}" />
+      <input type="hidden" id="notify-me-variant-title" name="variantTitle" value="{{ product.selected_or_first_available_variant.title | escape }}" />
+
+      <div class="notify-me__field-group">
+        <label for="notify-me-email" class="notify-me__label">
+          Email
+        </label>
+        <input
+          type="email"
+          id="notify-me-email"
+          name="email"
+          class="notify-me__input"
+          placeholder="tu@email.com"
+          required
+          autocomplete="email"
+          inputmode="email"
+        />
+      </div>
+
+      <button
+        type="submit"
+        id="notify-me-submit"
+        class="notify-me__button button button--full-width button--secondary"
+      >
+        {{ block.settings.button_text }}
+      </button>
+    </form>
+
+    <div id="notify-me-message" class="notify-me__message" role="alert" aria-live="assertive" style="display:none;"></div>
+  </div>
+</div>
+
+<style>
+  .notify-me {
+    margin-top: 1rem;
+  }
+
+  .notify-me__inner {
+    padding: 1.25rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: var(--buttons-radius, 4px);
+    background: rgb(var(--color-background));
+  }
+
+  .notify-me__heading {
+    margin: 0 0 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: rgb(var(--color-foreground));
+  }
+
+  .notify-me__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .notify-me__field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .notify-me__label {
+    font-size: 0.875rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .notify-me__input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: var(--inputs-radius, 4px);
+    font-size: 1rem;
+    color: rgb(var(--color-foreground));
+    background: rgb(var(--color-background));
+    box-sizing: border-box;
+  }
+
+  .notify-me__input:focus {
+    outline: 2px solid rgb(var(--color-foreground));
+    outline-offset: 2px;
+  }
+
+  .notify-me__button {
+    cursor: pointer;
+  }
+
+  .notify-me__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .notify-me__message {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .notify-me__message--success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+  }
+
+  .notify-me__message--error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+</style>
+
+<script src="{{ 'notify-me.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "Notificación de Restock",
+  "target": "section",
+  "templates": ["product"],
+  "settings": [
+    {
+      "type": "url",
+      "id": "backend_url",
+      "label": "URL del backend",
+      "info": "URL completa del servidor NotifyMe (p.ej. https://notifyme.vercel.app)",
+      "default": "https://notifyme.vercel.app"
+    },
+    {
+      "type": "text",
+      "id": "heading_text",
+      "label": "Título del formulario",
+      "default": "Avísame cuando esté disponible"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Texto del botón",
+      "default": "Avisarme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Notificación de Restock"
+    }
+  ]
+}
+{% endschema %}
