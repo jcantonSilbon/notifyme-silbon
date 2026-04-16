@@ -7,6 +7,6 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/**/*", "api/**/*"],
+  "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }
