@@ -5,7 +5,7 @@
     { "source": "/(.*)", "destination": "/api/index" }
   ],
   "crons": [
-    { "path": "/api/cron/retry-failed", "schedule": "*/15 * * * *" }
+    { "path": "/api/cron/retry-failed", "schedule": "0 8 * * *" }
   ],
   "headers": [
     {
