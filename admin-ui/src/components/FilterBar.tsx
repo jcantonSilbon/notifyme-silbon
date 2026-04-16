@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { InlineGrid, TextField, Select, Button, InlineStack } from '@shopify/polaris'
+import { InlineGrid, TextField, Select, Button } from '@shopify/polaris'
 import type { SubscriptionsParams } from '../api/client'
 
 interface FilterBarProps {

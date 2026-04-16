@@ -1,4 +1,3 @@
-import React from 'react'
 import { Card, Text, InlineGrid, BlockStack, Box, Badge } from '@shopify/polaris'
 import type { Stats } from '../api/client'
 
