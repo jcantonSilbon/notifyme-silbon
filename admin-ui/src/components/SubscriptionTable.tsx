@@ -6,7 +6,6 @@ import {
   InlineStack,
   Tooltip,
   useIndexResourceState,
-  type IndexTableHeading,
 } from '@shopify/polaris'
 import type { Subscription, SubscriptionStatus } from '../api/client'
 
@@ -45,7 +44,7 @@ export function SubscriptionTable({
   const { selectedResources, allResourcesSelected, handleSelectionChange } =
     useIndexResourceState(subscriptions as unknown as { [key: string]: unknown }[])
 
-  const headings: [IndexTableHeading, ...IndexTableHeading[]] = [
+  const headings = [
     { title: 'Email' },
     { title: 'Producto' },
     { title: 'Variante' },
