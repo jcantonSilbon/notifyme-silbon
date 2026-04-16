@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { InlineGrid, TextField, Select, Button } from '@shopify/polaris'
 import type { SubscriptionsParams } from '../api/client'
 
@@ -22,17 +22,14 @@ export function FilterBar({ filters, onFilterChange, onExport }: FilterBarProps)
     onFilterChange({ ...filters, search: search || undefined, page: 1 })
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearchSubmit()
-  }
-
   return (
+    // form wrapper captures Enter key on all inputs without needing onKeyDown on each field
+    <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit() }}>
     <InlineGrid columns={{ xs: 1, sm: '1fr 1fr auto auto' }} gap="300" alignItems="end">
       <TextField
         label="Buscar por email"
         value={search}
         onChange={setSearch}
-        onKeyDown={handleKeyDown}
         placeholder="cliente@ejemplo.com"
         clearButton
         onClearButtonClick={() => {
@@ -59,5 +56,6 @@ export function FilterBar({ filters, onFilterChange, onExport }: FilterBarProps)
         Exportar CSV
       </Button>
     </InlineGrid>
+    </form>
   )
 }
