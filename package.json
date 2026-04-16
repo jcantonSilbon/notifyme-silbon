@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "npm run build:api && npm run build:admin",
-    "build:api": "tsc --project tsconfig.build.json",
+    "build:api": "prisma generate && tsc --project tsconfig.build.json",
     "build:admin": "cd admin-ui && npm install && npm run build",
     "start": "node dist/index.js",
     "db:generate": "prisma generate",
