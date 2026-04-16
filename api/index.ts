@@ -1,21 +1,31 @@
 /**
  * Vercel Serverless Function entry point.
  *
- * Imports from ../dist/ (pre-compiled by `npm run build:api`), NOT from ../src/.
- * This is intentional: Vercel's @vercel/node runtime transpiles TypeScript files
- * individually without bundling — it does NOT resolve .js extension imports to
- * .tsx source files at runtime. Importing from dist/ ensures all files are plain
- * .js with no .tsx resolution needed.
+ * Imports from src/ — NOT from dist/.
+ * Vercel's @vercel/node uses esbuild to bundle this file and all its imports.
+ * esbuild natively handles .ts and .tsx files (including the react-email template),
+ * so the .js → .tsx extension mapping works correctly at bundle time.
  *
- * Build order guaranteed by Vercel:
- *   1. npm run build  →  src/ compiled to dist/ (including .tsx → .js)
- *   2. Vercel processes api/index.ts as the serverless entry
+ * Do NOT import from dist/ here: Node.js cannot resolve .js imports to .tsx
+ * source files at runtime, but esbuild can at bundle time.
+ *
+ * The app is initialised once per cold start and reused across warm invocations.
  */
 import type { IncomingMessage, ServerResponse } from 'http'
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore — dist/ is generated at build time; not present in source tree
-import { fastify } from '../dist/app.js'
+import { buildApp } from '../src/app.js'
+
+type FastifyInstance = Awaited<ReturnType<typeof buildApp>>
+
+let appInstance: FastifyInstance | null = null
+
+async function getApp(): Promise<FastifyInstance> {
+  if (!appInstance) {
+    appInstance = await buildApp()
+  }
+  return appInstance
+}
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  fastify.server.emit('request', req, res)
+  const app = await getApp()
+  app.server.emit('request', req, res)
 }
