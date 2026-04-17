@@ -19,12 +19,13 @@
   "handle": {{ product.handle | json }},
   "title": {{ product.title | json }},
   "has_only_default_variant": {{ product.has_only_default_variant | json }},
-  "option_name": {{ product.options.first | json }},
+  "option_names": {{ product.options | json }},
   "variants": [
     {%- for variant in product.variants -%}
     {
       "id": {{ variant.id }},
       "title": {{ variant.title | json }},
+      "options": {{ variant.options | json }},
       "option1": {{ variant.option1 | json }},
       "available": {{ variant.available }}
     }{%- unless forloop.last -%},{%- endunless -%}

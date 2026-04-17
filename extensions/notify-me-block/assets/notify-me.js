@@ -55,6 +55,8 @@
   var singleVariant = productData.variants.length === 1;
   var multiVariant = productData.variants.length > 1;
   var fallbackRequired = false;
+  var optionNames = Array.isArray(productData.option_names) ? productData.option_names : [];
+  var sizeOptionIndex = getSizeOptionIndex(optionNames);
   var hasUnavailableVariants = productData.variants.some(function (variant) {
     return !variant.available;
   });
@@ -99,6 +101,26 @@
     return variantsById[String(variantId)] || null;
   }
 
+  function normalizeText(value) {
+    return String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  function getSizeOptionIndex(names) {
+    var sizeNames = ['talla', 'size', 'taille', 'groesse', 'grosse'];
+
+    for (var i = 0; i < names.length; i += 1) {
+      if (sizeNames.indexOf(normalizeText(names[i])) >= 0) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
   function getSelectedVariantIdFromUrl() {
     return new URLSearchParams(window.location.search).get('variant');
   }
@@ -128,6 +150,49 @@
     ).filter(isUsableElement);
   }
 
+  function getVisibleLabelText(element) {
+    if (!element) return '';
+
+    var labelText = '';
+    var label = element.closest('label');
+    if (label) labelText += ' ' + label.textContent;
+
+    var fieldset = element.closest('fieldset');
+    if (fieldset) {
+      var legend = fieldset.querySelector('legend');
+      if (legend) labelText += ' ' + legend.textContent;
+    }
+
+    var wrapper = element.closest('[data-option-name], [data-option-position], [data-index], .product-form__input, .selector-wrapper');
+    if (wrapper) {
+      labelText += ' ' + (wrapper.getAttribute('data-option-name') || '');
+      labelText += ' ' + (wrapper.getAttribute('data-index') || '');
+      labelText += ' ' + (wrapper.textContent || '');
+    }
+
+    labelText += ' ' + (element.getAttribute('name') || '');
+    labelText += ' ' + (element.getAttribute('aria-label') || '');
+
+    return normalizeText(labelText);
+  }
+
+  function themeHasVisibleSizeSelector() {
+    if (sizeOptionIndex < 0) return false;
+
+    var expectedName = normalizeText(optionNames[sizeOptionIndex]);
+    var expectedPosition = String(sizeOptionIndex + 1);
+
+    return getThemeOptionInputs().some(function (element) {
+      var labelText = getVisibleLabelText(element);
+      return (
+        labelText.indexOf(expectedName) >= 0 ||
+        labelText.indexOf('option' + expectedPosition) >= 0 ||
+        labelText.indexOf('option ' + expectedPosition) >= 0 ||
+        labelText.indexOf('options[' + expectedName + ']') >= 0
+      );
+    });
+  }
+
   function isUsableElement(element) {
     if (!element) return false;
     if (element.disabled) return false;
@@ -149,6 +214,11 @@
   function hasUsableThemeSelector() {
     if (!multiVariant) return false;
 
+    if (sizeOptionIndex >= 0) {
+      if (!themeHasVisibleSizeSelector()) return false;
+      return Boolean(getThemeVariantFromInputs());
+    }
+
     if (getThemeOptionInputs().length > 0) {
       return Boolean(getThemeVariantFromInputs());
     }
@@ -162,11 +232,15 @@
   }
 
   function getFallbackPromptText() {
-    return 'Selecciona tu ' + (productData.option_name || 'talla');
+    var label = sizeOptionIndex >= 0 ? optionNames[sizeOptionIndex] : 'talla';
+    return 'Selecciona tu ' + label;
   }
 
   function getFallbackOptionLabel(variant) {
-    var optionValue = variant.option1 || variant.title || ('Variante ' + variant.id);
+    var optionValue =
+      sizeOptionIndex >= 0 && Array.isArray(variant.options)
+        ? variant.options[sizeOptionIndex]
+        : variant.option1 || variant.title || ('Variante ' + variant.id);
     return variant.available ? optionValue + ' - disponible' : optionValue;
   }
 

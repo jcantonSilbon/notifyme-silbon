@@ -149,9 +149,8 @@ export async function getStats() {
 }
 
 export async function deleteSubscription(id: string) {
-  await prisma.subscription.update({
+  await prisma.subscription.delete({
     where: { id },
-    data: { status: 'FAILED', errorMessage: 'Deleted by admin' },
   })
 }
 

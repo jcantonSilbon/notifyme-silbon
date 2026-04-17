@@ -78,7 +78,14 @@ export default function App() {
     try {
       await api.deleteSubscription(id)
       setSuccessMessage('Suscripción eliminada')
-      loadSubscriptions()
+      setSubscriptions((current) => {
+        if (!current) return current
+        return {
+          ...current,
+          data: current.data.filter((sub) => sub.id !== id),
+          total: Math.max(0, current.total - 1),
+        }
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar')
     }
