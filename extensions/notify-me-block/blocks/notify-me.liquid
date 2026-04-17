@@ -45,75 +45,173 @@
   style="display: none;"
   aria-live="polite"
 >
-  <div class="notify-me__inner">
-    <p class="notify-me__heading">{{ block.settings.heading_text }}</p>
+  <button
+    type="button"
+    id="notify-me-open"
+    class="notify-me__trigger"
+    aria-haspopup="dialog"
+    aria-controls="notify-me-modal"
+    aria-expanded="false"
+  >
+    <span class="notify-me__trigger-icon" aria-hidden="true">●</span>
+    <span>{{ block.settings.button_text }}</span>
+  </button>
 
-    {%- comment -%}
-      Own variant selector.
-      Shown by JS only when the theme selector is not usable.
-      The control is rendered dynamically by notify-me.js and becomes
-      mandatory for multi-variant products without a usable theme picker.
-    {%- endcomment -%}
-    <div id="notify-me-selector-wrap" style="display: none;">
-      <label id="notify-me-selector-label" class="notify-me__selector-label" for="notify-me-variant-select"></label>
-      <select id="notify-me-variant-select" class="notify-me__select"></select>
-    </div>
-
-    <form id="notify-me-form" class="notify-me__form" novalidate>
-      {%- comment -%} Honeypot — must remain empty {%- endcomment -%}
-      <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
-        <label for="notify-me-honeypot">Leave this empty</label>
-        <input type="text" id="notify-me-honeypot" name="honeypot" tabindex="-1" autocomplete="off" value="" />
-      </div>
-
-      <input type="hidden" id="notify-me-product-id"     name="productId"     value="{{ product.id }}" />
-      <input type="hidden" id="notify-me-product-handle" name="productHandle" value="{{ product.handle }}" />
-      <input type="hidden" id="notify-me-variant-id"     name="variantId"     value="" />
-      <input type="hidden" id="notify-me-inventory-item-id" name="inventoryItemId" value="" />
-      <input type="hidden" id="notify-me-product-title"  name="productTitle"  value="{{ product.title | escape }}" />
-      <input type="hidden" id="notify-me-variant-title"  name="variantTitle"  value="" />
-
-      <div class="notify-me__field-group">
-        <label for="notify-me-email" class="notify-me__label">Email</label>
-        <input
-          type="email"
-          id="notify-me-email"
-          name="email"
-          class="notify-me__input"
-          placeholder="tu@email.com"
-          required
-          autocomplete="email"
-          inputmode="email"
-        />
-      </div>
-
-      <button
-        type="submit"
-        id="notify-me-submit"
-        class="notify-me__button button button--full-width button--secondary"
-      >
-        {{ block.settings.button_text }}
+  <div id="notify-me-modal" class="notify-me__modal" style="display: none;" aria-hidden="true">
+    <div id="notify-me-backdrop" class="notify-me__backdrop"></div>
+    <div
+      class="notify-me__dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="notify-me-title"
+    >
+      <button type="button" id="notify-me-close" class="notify-me__close" aria-label="Cerrar">
+        ×
       </button>
-    </form>
 
-    <div id="notify-me-message" class="notify-me__message" role="alert" aria-live="assertive" style="display: none;"></div>
+      <div class="notify-me__inner">
+        <p id="notify-me-title" class="notify-me__heading">{{ block.settings.heading_text }}</p>
+
+        {%- comment -%}
+          Own variant selector.
+          Shown by JS only when the theme selector is not usable.
+          The control is rendered dynamically by notify-me.js and becomes
+          mandatory for multi-variant products without a usable theme picker.
+        {%- endcomment -%}
+        <div id="notify-me-selector-wrap" style="display: none;">
+          <label id="notify-me-selector-label" class="notify-me__selector-label" for="notify-me-variant-select"></label>
+          <select id="notify-me-variant-select" class="notify-me__select"></select>
+        </div>
+
+        <form id="notify-me-form" class="notify-me__form" novalidate>
+          {%- comment -%} Honeypot — must remain empty {%- endcomment -%}
+          <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+            <label for="notify-me-honeypot">Leave this empty</label>
+            <input type="text" id="notify-me-honeypot" name="honeypot" tabindex="-1" autocomplete="off" value="" />
+          </div>
+
+          <input type="hidden" id="notify-me-product-id"     name="productId"     value="{{ product.id }}" />
+          <input type="hidden" id="notify-me-product-handle" name="productHandle" value="{{ product.handle }}" />
+          <input type="hidden" id="notify-me-variant-id"     name="variantId"     value="" />
+          <input type="hidden" id="notify-me-inventory-item-id" name="inventoryItemId" value="" />
+          <input type="hidden" id="notify-me-product-title"  name="productTitle"  value="{{ product.title | escape }}" />
+          <input type="hidden" id="notify-me-variant-title"  name="variantTitle"  value="" />
+
+          <div class="notify-me__field-group">
+            <label for="notify-me-email" class="notify-me__label">Correo electrónico</label>
+            <input
+              type="email"
+              id="notify-me-email"
+              name="email"
+              class="notify-me__input"
+              placeholder="tu@email.com"
+              required
+              autocomplete="email"
+              inputmode="email"
+            />
+          </div>
+
+          <button
+            type="submit"
+            id="notify-me-submit"
+            class="notify-me__button button button--full-width button--secondary"
+          >
+            Notificarme cuando esté disponible
+          </button>
+        </form>
+
+        <div id="notify-me-message" class="notify-me__message" role="alert" aria-live="assertive" style="display: none;"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 <style>
-  .notify-me { margin-top: 1rem; }
+  .notify-me {
+    margin-top: 1rem;
+  }
+
+  .notify-me__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 2.875rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid rgb(var(--color-foreground));
+    border-radius: 0;
+    background: transparent;
+    color: rgb(var(--color-foreground));
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .notify-me__trigger:hover {
+    background: rgb(var(--color-foreground));
+    color: rgb(var(--color-background));
+  }
+
+  .notify-me__trigger-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    font-size: 0.625rem;
+  }
+
+  .notify-me__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+  }
+
+  .notify-me__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .notify-me__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(28rem, calc(100vw - 2rem));
+    margin: 12vh auto 0;
+    background: rgb(var(--color-background));
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+  }
 
   .notify-me__inner {
-    padding: 1.25rem;
-    border: 1px solid rgb(var(--color-border));
-    border-radius: var(--buttons-radius, 4px);
+    position: relative;
+    padding: 1.5rem;
     background: rgb(var(--color-background));
   }
 
+  .notify-me__close {
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    z-index: 1;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: rgb(var(--color-foreground));
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
   .notify-me__heading {
-    margin: 0 0 0.75rem;
-    font-size: 0.9375rem;
-    font-weight: 600;
+    margin: 0 2rem 1rem 0;
+    font-size: 1.125rem;
+    font-weight: 700;
     color: rgb(var(--color-foreground));
   }
 
@@ -201,6 +299,10 @@
     background: #fef2f2;
     color: #991b1b;
     border: 1px solid #fecaca;
+  }
+
+  body.notify-me-modal-open {
+    overflow: hidden;
   }
 </style>
 

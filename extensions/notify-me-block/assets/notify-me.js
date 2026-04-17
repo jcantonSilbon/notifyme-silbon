@@ -15,6 +15,10 @@
   var form = document.getElementById('notify-me-form');
   var submitBtn = document.getElementById('notify-me-submit');
   var messageEl = document.getElementById('notify-me-message');
+  var openBtn = document.getElementById('notify-me-open');
+  var closeBtn = document.getElementById('notify-me-close');
+  var modalEl = document.getElementById('notify-me-modal');
+  var backdropEl = document.getElementById('notify-me-backdrop');
   var variantIdInput = document.getElementById('notify-me-variant-id');
   var inventoryItemIdInput = document.getElementById('notify-me-inventory-item-id');
   var variantTitleInput = document.getElementById('notify-me-variant-title');
@@ -29,6 +33,10 @@
     !form ||
     !submitBtn ||
     !messageEl ||
+    !openBtn ||
+    !closeBtn ||
+    !modalEl ||
+    !backdropEl ||
     !variantIdInput ||
     !inventoryItemIdInput ||
     !variantTitleInput ||
@@ -57,6 +65,7 @@
   var singleVariant = productData.variants.length === 1;
   var multiVariant = productData.variants.length > 1;
   var fallbackRequired = false;
+  var modalOpen = false;
   var optionNames = Array.isArray(productData.option_names) ? productData.option_names : [];
   var sizeOptionIndex = getSizeOptionIndex(optionNames);
   var hasUnavailableVariants = productData.variants.some(function (variant) {
@@ -96,6 +105,23 @@
     form.style.display = '';
     hideMessage();
     setLoading(false);
+  }
+
+  function openModal() {
+    if (container.style.display === 'none') return;
+    modalOpen = true;
+    modalEl.style.display = '';
+    modalEl.setAttribute('aria-hidden', 'false');
+    openBtn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('notify-me-modal-open');
+  }
+
+  function closeModal() {
+    modalOpen = false;
+    modalEl.style.display = 'none';
+    modalEl.setAttribute('aria-hidden', 'true');
+    openBtn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('notify-me-modal-open');
   }
 
   function getVariantById(variantId) {
@@ -291,6 +317,7 @@
       inventoryItemIdInput.value = '';
       variantTitleInput.value = '';
       hideMessage();
+      closeModal();
       if (fallbackRequired && hasUnavailableVariants) {
         resetFormState();
         container.style.display = '';
@@ -313,6 +340,7 @@
     if (variant.available) {
       container.style.display = 'none';
       hideMessage();
+      closeModal();
       return;
     }
 
@@ -382,6 +410,24 @@
 
   window.addEventListener('popstate', function () {
     ensureResolvedVariant();
+  });
+
+  openBtn.addEventListener('click', function () {
+    openModal();
+  });
+
+  closeBtn.addEventListener('click', function () {
+    closeModal();
+  });
+
+  backdropEl.addEventListener('click', function () {
+    closeModal();
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && modalOpen) {
+      closeModal();
+    }
   });
 
   var observer = new MutationObserver(function () {
