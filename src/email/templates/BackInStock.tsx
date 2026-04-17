@@ -60,8 +60,8 @@ export function BackInStockEmail({
             <Section style={productImageSectionStyle}>
               <Img
                 src={productImageUrl}
-                width="600"
-                height="auto"
+                width="240"
+                height="240"
                 alt={productTitle}
                 style={productImageStyle}
               />
@@ -147,16 +147,17 @@ const hrStyle: React.CSSProperties = {
 }
 
 const productImageSectionStyle: React.CSSProperties = {
-  padding: '0',
-  lineHeight: '0',
+  padding: '24px 40px 0',
+  textAlign: 'center' as const,
 }
 
 const productImageStyle: React.CSSProperties = {
   display: 'block',
-  width: '100%',
-  maxWidth: '600px',
-  height: 'auto',
+  width: '240px',
+  height: '240px',
   objectFit: 'cover' as const,
+  borderRadius: '4px',
+  margin: '0 auto',
 }
 
 const contentStyle: React.CSSProperties = {
