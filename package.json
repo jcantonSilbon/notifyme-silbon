@@ -19,7 +19,7 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "eslint src --ext .ts,.tsx", 
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
