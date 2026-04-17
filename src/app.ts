@@ -48,6 +48,7 @@ export async function buildApp() {
     origin: [
       'https://silbon.com',
       'https://silbon.myshopify.com',
+      'https://silbon-staging-v2.myshopify.com',
       ...(config.NODE_ENV === 'development'
         ? ['http://localhost:3000', 'http://localhost:5173']
         : []),
