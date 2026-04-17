@@ -83,7 +83,6 @@ export async function buildApp() {
     await fastify.register(fastifyStatic, {
       root: adminDistPath,
       prefix: '/admin',
-      decorateReply: false,
       index: 'index.html',
     })
     fastify.setNotFoundHandler((request, reply) => {
