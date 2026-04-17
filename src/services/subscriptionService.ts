@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
 import { validateEmail, normalizeEmail } from '../utils/emailValidator.js'
-import { warmCacheForVariant } from './variantCacheService.js'
+import { ensureVariantCacheForVariant, warmCacheForVariant } from './variantCacheService.js'
 import { logger } from '../utils/logger.js'
 
 export const SubscribeInputSchema = z.object({
@@ -68,6 +68,19 @@ export async function createSubscription(raw: unknown): Promise<SubscribeResult>
     return { status: 'duplicate' }
   }
 
+  let resolvedInventoryItemId = inventoryItemId
+  if (!resolvedInventoryItemId) {
+    try {
+      const cacheEntry = await ensureVariantCacheForVariant(variantId)
+      resolvedInventoryItemId = cacheEntry.inventoryItemId
+    } catch (err) {
+      logger.warn('Failed to resolve inventoryItemId during subscription creation', {
+        variantId,
+        error: err,
+      })
+    }
+  }
+
   // Create the subscription.
   // The partial unique index `unique_pending_sub` (email, variantId) WHERE status='PENDING'
   // is the authoritative DB-level guard. The findFirst check above handles the common
@@ -80,7 +93,7 @@ export async function createSubscription(raw: unknown): Promise<SubscribeResult>
         productId,
         productHandle,
         variantId,
-        inventoryItemId,
+        inventoryItemId: resolvedInventoryItemId,
         productTitle,
         variantTitle,
         status: 'PENDING',
@@ -95,7 +108,13 @@ export async function createSubscription(raw: unknown): Promise<SubscribeResult>
     throw err
   }
 
-  logger.info('Subscription created', { email, variantId, productTitle, variantTitle })
+  logger.info('Subscription created', {
+    email,
+    variantId,
+    inventoryItemId: resolvedInventoryItemId,
+    productTitle,
+    variantTitle,
+  })
 
   // Warm the VariantCache in the background — don't await (fire-and-forget)
   // This ensures the cache is populated before the first webhook fires

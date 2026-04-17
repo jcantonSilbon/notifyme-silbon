@@ -2,6 +2,33 @@ import { prisma } from '../db.js'
 import { fetchVariant, fetchProductTitle, fetchVariantByInventoryItem } from '../shopify.js'
 import { logger } from '../utils/logger.js'
 
+export async function ensureVariantCacheForVariant(variantId: string) {
+  const existing = await prisma.variantCache.findFirst({
+    where: { variantId },
+  })
+  if (existing) return existing
+
+  const variant = await fetchVariant(variantId)
+  const productTitle = await fetchProductTitle(String(variant.product_id))
+
+  return prisma.variantCache.upsert({
+    where: { inventoryItemId: String(variant.inventory_item_id) },
+    create: {
+      inventoryItemId: String(variant.inventory_item_id),
+      variantId: String(variant.id),
+      productId: String(variant.product_id),
+      productTitle,
+      variantTitle: variant.title,
+    },
+    update: {
+      variantId: String(variant.id),
+      productId: String(variant.product_id),
+      productTitle,
+      variantTitle: variant.title,
+    },
+  })
+}
+
 /**
  * Warms the VariantCache for a given variantId.
  * Called fire-and-forget after a subscription is created so the cache is
@@ -9,33 +36,8 @@ import { logger } from '../utils/logger.js'
  */
 export async function warmCacheForVariant(variantId: string): Promise<void> {
   try {
-    // Check if already cached
-    const existing = await prisma.variantCache.findFirst({
-      where: { variantId },
-    })
-    if (existing) return
-
-    const variant = await fetchVariant(variantId)
-    const productTitle = await fetchProductTitle(String(variant.product_id))
-
-    await prisma.variantCache.upsert({
-      where: { inventoryItemId: String(variant.inventory_item_id) },
-      create: {
-        inventoryItemId: String(variant.inventory_item_id),
-        variantId: String(variant.id),
-        productId: String(variant.product_id),
-        productTitle,
-        variantTitle: variant.title,
-      },
-      update: {
-        variantId: String(variant.id),
-        productId: String(variant.product_id),
-        productTitle,
-        variantTitle: variant.title,
-      },
-    })
-
-    logger.info('VariantCache warmed', { variantId, inventoryItemId: variant.inventory_item_id })
+    const entry = await ensureVariantCacheForVariant(variantId)
+    logger.info('VariantCache warmed', { variantId, inventoryItemId: entry.inventoryItemId })
   } catch (err) {
     // Non-fatal: the cache will be populated on the first webhook cache miss
     logger.warn('Failed to warm VariantCache', { variantId, error: err })
