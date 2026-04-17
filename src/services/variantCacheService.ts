@@ -1,5 +1,5 @@
 import { prisma } from '../db.js'
-import { fetchVariant, fetchProductTitle, fetchInventoryItem } from '../shopify.js'
+import { fetchVariant, fetchProductTitle, fetchVariantByInventoryItem } from '../shopify.js'
 import { logger } from '../utils/logger.js'
 
 /**
@@ -58,18 +58,17 @@ export async function resolveInventoryItem(inventoryItemId: string) {
   logger.info('VariantCache miss, fetching from Shopify API', { inventoryItemId })
 
   try {
-    const inventoryItem = await fetchInventoryItem(inventoryItemId)
+    // variants.json?inventory_item_ids={id} is the correct way to resolve
+    // inventory_item_id → variant in API 2024-10+.
+    // inventory_items/{id}.json no longer includes variant_id.
+    const variant = await fetchVariantByInventoryItem(inventoryItemId)
 
-    // Guard: inventory items for custom stock adjustments (no associated variant)
-    // have variant_id = null. These are not subscribable products.
-    if (!inventoryItem.variant_id) {
-      logger.info('Skipping: inventory item has no associated variant', { inventoryItemId })
+    if (!variant) {
+      logger.info('Skipping: no variant found for inventory item', { inventoryItemId })
       return null
     }
 
-    const variantId = String(inventoryItem.variant_id)
-
-    const variant = await fetchVariant(variantId)
+    const variantId = String(variant.id)
     const productTitle = await fetchProductTitle(String(variant.product_id))
 
     const entry = await prisma.variantCache.upsert({
@@ -88,6 +87,7 @@ export async function resolveInventoryItem(inventoryItemId: string) {
         variantTitle: variant.title,
       },
     })
+
 
     logger.info('VariantCache populated from API', { inventoryItemId, variantId })
     return entry

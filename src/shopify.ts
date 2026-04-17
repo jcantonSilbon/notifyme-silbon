@@ -53,21 +53,29 @@ export async function fetchProductTitle(productId: string): Promise<string> {
 }
 
 /**
- * Fetch an inventory item to get the associated variant_id.
- * Note: inventory items created for non-variant products have variant_id = null.
- * Callers must guard against this.
+ * Resolves an inventory_item_id to its variant using
+ * GET variants.json?inventory_item_ids={id}.
+ *
+ * inventory_items/{id}.json no longer includes variant_id in API 2024-10+.
+ * The variants endpoint with the inventory_item_ids filter is the correct
+ * way to do this lookup.
+ *
+ * Returns null if no variant is associated (e.g. custom stock adjustments).
  */
-export async function fetchInventoryItem(inventoryItemId: string) {
+export async function fetchVariantByInventoryItem(inventoryItemId: string) {
   const client = new shopify.clients.Rest({ session: shopifySession })
   const response = await client.get<{
-    inventory_item: {
+    variants: Array<{
       id: number
-      variant_id: number | null
-    }
+      product_id: number
+      title: string
+      inventory_item_id: number
+    }>
   }>({
-    path: `inventory_items/${inventoryItemId}`,
+    path: 'variants',
+    query: { inventory_item_ids: inventoryItemId },
   })
-  return response.body.inventory_item
+  return response.body.variants[0] ?? null
 }
 
 /**
