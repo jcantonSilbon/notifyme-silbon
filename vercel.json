@@ -3,7 +3,7 @@
   "version": 2,
   "functions": {
     "api/index.js": {
-      "includeFiles": "dist/app.bundle.js"
+      "includeFiles": "dist/admin/**"
     }
   },
   "rewrites": [

@@ -101,3 +101,17 @@ export async function buildApp() {
   await fastify.ready()
   return fastify
 }
+
+// Vercel serverless handler.
+// @vercel/node compiles src/app.ts in-place to src/app.js and uses it as the
+// function entry module — it requires the default export to be a function or server.
+let _appPromise: ReturnType<typeof buildApp> | null = null
+
+export default async function handler(
+  req: import('http').IncomingMessage,
+  res: import('http').ServerResponse,
+): Promise<void> {
+  if (!_appPromise) _appPromise = buildApp()
+  const app = await _appPromise
+  app.server.emit('request', req, res)
+}
