@@ -2,7 +2,7 @@
 
 client_id = "6592fd4819722b249b2e8d8cd1615311"
 name = "NotifyMe"
-application_url = "https://notifyme-silbon.vercel.app"
+application_url = "https://notifyme-silbon.vercel.app/admin"
 embedded = false
 
 [webhooks]

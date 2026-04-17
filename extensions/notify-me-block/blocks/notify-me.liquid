@@ -38,7 +38,7 @@
 <div
   id="notify-me-container"
   class="notify-me"
-  data-backend-url="{{ block.settings.backend_url }}"
+  data-backend-url="https://notifyme-silbon.vercel.app"
   data-product-id="{{ product.id }}"
   data-product-title="{{ product.title | escape }}"
   data-product-handle="{{ product.handle }}"
@@ -74,7 +74,7 @@
       </button>
 
       <div class="notify-me__inner">
-        <p id="notify-me-title" class="notify-me__heading">{{ block.settings.heading_text }}</p>
+        <p id="notify-me-title" class="notify-me__heading">Avísame cuando esté disponible</p>
 
         {%- comment -%}
           Own variant selector.
@@ -357,25 +357,6 @@
   "name": "Notificación de Restock",
   "target": "section",
   "templates": ["product"],
-  "settings": [
-    {
-      "type": "url",
-      "id": "backend_url",
-      "label": "URL del backend",
-      "info": "URL completa del servidor NotifyMe (p.ej. https://notifyme-silbon.vercel.app)"
-    },
-    {
-      "type": "text",
-      "id": "heading_text",
-      "label": "Título del formulario",
-      "default": "Avísame cuando esté disponible"
-    },
-    {
-      "type": "text",
-      "id": "button_text",
-      "label": "Texto del botón",
-      "default": "Avisarme"
-    }
-  ]
+  "settings": []
 }
 {% endschema %}
