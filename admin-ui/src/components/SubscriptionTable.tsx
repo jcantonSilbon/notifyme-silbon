@@ -4,6 +4,7 @@ import {
   Text,
   Button,
   InlineStack,
+  BlockStack,
   Tooltip,
   useIndexResourceState,
 } from '@shopify/polaris'
@@ -52,7 +53,6 @@ export function SubscriptionTable({
     { title: 'Reintentos' },
     { title: 'Suscrito el' },
     { title: 'Notificado el' },
-    { title: 'Acciones' },
   ]
 
   const rowMarkup = subscriptions.map((sub, index) => {
@@ -75,9 +75,30 @@ export function SubscriptionTable({
           </Text>
         </IndexTable.Cell>
         <IndexTable.Cell>
-          <Text variant="bodyMd" as="span">
-            {sub.variantTitle}
-          </Text>
+          <BlockStack gap="200">
+            <Text variant="bodyMd" as="span">
+              {sub.variantTitle}
+            </Text>
+            <InlineStack gap="200" wrap={false}>
+              {(sub.status === 'FAILED' || sub.status === 'PENDING') && (
+                <Button
+                  size="micro"
+                  onClick={() => onRetry(sub.id)}
+                  accessibilityLabel={`Reintentar ${sub.email}`}
+                >
+                  Reintentar
+                </Button>
+              )}
+              <Button
+                size="micro"
+                tone="critical"
+                onClick={() => onDelete(sub.id)}
+                accessibilityLabel={`Eliminar ${sub.email}`}
+              >
+                Eliminar
+              </Button>
+            </InlineStack>
+          </BlockStack>
         </IndexTable.Cell>
         <IndexTable.Cell>
           <Tooltip content={sub.errorMessage ?? undefined} dismissOnMouseOut>
@@ -98,27 +119,6 @@ export function SubscriptionTable({
           <Text variant="bodyMd" as="span" tone="subdued">
             {formatDate(sub.notifiedAt)}
           </Text>
-        </IndexTable.Cell>
-        <IndexTable.Cell>
-          <InlineStack gap="200">
-            {(sub.status === 'FAILED' || sub.status === 'PENDING') && (
-              <Button
-                size="slim"
-                onClick={() => onRetry(sub.id)}
-                accessibilityLabel={`Reintentar ${sub.email}`}
-              >
-                Reintentar
-              </Button>
-            )}
-            <Button
-              size="slim"
-              tone="critical"
-              onClick={() => onDelete(sub.id)}
-              accessibilityLabel={`Eliminar ${sub.email}`}
-            >
-              Eliminar
-            </Button>
-          </InlineStack>
         </IndexTable.Cell>
       </IndexTable.Row>
     )
