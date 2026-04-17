@@ -28,7 +28,7 @@
     <p class="notify-me__heading">{{ block.settings.heading_text }}</p>
 
     <form id="notify-me-form" class="notify-me__form" novalidate>
-      {{- /* Honeypot: hidden field to catch bots. Must remain empty. */ -}}
+      {%- comment -%}Honeypot: hidden field to catch bots. Must remain empty.{%- endcomment -%}
       <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
         <label for="notify-me-honeypot">Leave this empty</label>
         <input

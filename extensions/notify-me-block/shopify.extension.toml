@@ -4,6 +4,7 @@
 api_version = "2024-10"
 
 [[extensions]]
+uid = "66d2af6f-12c8-c6c4-d1cd-b79d0bc57ff03996024c"
 type = "theme"
 name = "Notify Me Block"
 handle = "notify-me-block"
