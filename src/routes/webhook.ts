@@ -60,12 +60,14 @@ async function processInventoryUpdate(payload: InventoryLevelPayload) {
     where: {
       status: 'PENDING',
       OR: [
+        { inventoryItemId: String(inventory_item_id) },
         { variantId: cached.variantId },
         { productId: cached.productId, variantTitle: cached.variantTitle },
       ],
     },
     select: {
       id: true,
+      inventoryItemId: true,
       variantId: true,
       variantTitle: true,
       productId: true,
@@ -82,16 +84,20 @@ async function processInventoryUpdate(payload: InventoryLevelPayload) {
     return
   }
 
-  const exactMatchCount = pendingSubscriptions.filter((sub) => sub.variantId === cached.variantId).length
-  const fallbackMatchCount = pendingSubscriptions.length - exactMatchCount
+  const inventoryMatchCount = pendingSubscriptions.filter(
+    (sub) => sub.inventoryItemId === String(inventory_item_id),
+  ).length
+  const exactVariantMatchCount = pendingSubscriptions.filter((sub) => sub.variantId === cached.variantId).length
+  const fallbackMatchCount = pendingSubscriptions.length - inventoryMatchCount - Math.max(0, exactVariantMatchCount - inventoryMatchCount)
 
-  if (fallbackMatchCount > 0) {
-    logger.warn('Found pending subscriptions via fallback productId + variantTitle matching', {
+  if (inventoryMatchCount < pendingSubscriptions.length) {
+    logger.warn('Found pending subscriptions through fallback matching instead of inventoryItemId exact match', {
       inventory_item_id,
       variantId: cached.variantId,
       productId: cached.productId,
       variantTitle: cached.variantTitle,
-      exactMatchCount,
+      inventoryMatchCount,
+      exactVariantMatchCount,
       fallbackMatchCount,
     })
   }

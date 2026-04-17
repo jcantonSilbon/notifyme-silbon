@@ -13,6 +13,7 @@ model Subscription {
   shop          String             @default("silbon.myshopify.com")
   productId     String
   variantId     String
+  inventoryItemId String?
   productTitle  String
   variantTitle  String
   email         String
@@ -27,6 +28,7 @@ model Subscription {
 
   // Hot path: webhook handler looks up by variantId + status
   @@index([variantId, status])
+  @@index([inventoryItemId, status])
   // Admin filters
   @@index([productId])
   @@index([status])

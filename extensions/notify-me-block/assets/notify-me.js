@@ -16,6 +16,7 @@
   var submitBtn = document.getElementById('notify-me-submit');
   var messageEl = document.getElementById('notify-me-message');
   var variantIdInput = document.getElementById('notify-me-variant-id');
+  var inventoryItemIdInput = document.getElementById('notify-me-inventory-item-id');
   var variantTitleInput = document.getElementById('notify-me-variant-title');
   var productHandleInput = document.getElementById('notify-me-product-handle');
   var emailInput = document.getElementById('notify-me-email');
@@ -29,6 +30,7 @@
     !submitBtn ||
     !messageEl ||
     !variantIdInput ||
+    !inventoryItemIdInput ||
     !variantTitleInput ||
     !productHandleInput ||
     !emailInput ||
@@ -286,6 +288,7 @@
 
     if (!variant) {
       variantIdInput.value = '';
+      inventoryItemIdInput.value = '';
       variantTitleInput.value = '';
       hideMessage();
       if (fallbackRequired && hasUnavailableVariants) {
@@ -298,6 +301,7 @@
     }
 
     variantIdInput.value = String(variant.id);
+    inventoryItemIdInput.value = String(variant.inventory_item_id || '');
     variantTitleInput.value = variant.title || '';
     container.dataset.variantId = String(variant.id);
     container.dataset.variantTitle = variant.title || '';
@@ -433,6 +437,7 @@
       productId: String(container.dataset.productId || ''),
       productHandle: String(productHandleInput.value || container.dataset.productHandle || ''),
       variantId: String(variantIdInput.value || ''),
+      inventoryItemId: String(inventoryItemIdInput.value || ''),
       productTitle: String(container.dataset.productTitle || productData.title || ''),
       variantTitle: String(variantTitleInput.value || ''),
       honeypot: String(document.getElementById('notify-me-honeypot') && document.getElementById('notify-me-honeypot').value || '')

@@ -27,6 +27,7 @@
       "title": {{ variant.title | json }},
       "options": {{ variant.options | json }},
       "option1": {{ variant.option1 | json }},
+      "inventory_item_id": {{ variant.inventory_item_id | json }},
       "available": {{ variant.available }}
     }{%- unless forloop.last -%},{%- endunless -%}
     {%- endfor -%}
@@ -68,6 +69,7 @@
       <input type="hidden" id="notify-me-product-id"     name="productId"     value="{{ product.id }}" />
       <input type="hidden" id="notify-me-product-handle" name="productHandle" value="{{ product.handle }}" />
       <input type="hidden" id="notify-me-variant-id"     name="variantId"     value="" />
+      <input type="hidden" id="notify-me-inventory-item-id" name="inventoryItemId" value="" />
       <input type="hidden" id="notify-me-product-title"  name="productTitle"  value="{{ product.title | escape }}" />
       <input type="hidden" id="notify-me-variant-title"  name="variantTitle"  value="" />
 

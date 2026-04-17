@@ -10,6 +10,7 @@ export const SubscribeInputSchema = z.object({
   productId: z.string().min(1).max(64),
   productHandle: z.string().min(1).max(255),
   variantId: z.string().min(1).max(64),
+  inventoryItemId: z.string().min(1).max(64).optional(),
   productTitle: z.string().min(1).max(255),
   variantTitle: z.string().min(1).max(255),
   honeypot: z.string().max(0, 'Bot detected'), // must be empty string
@@ -35,7 +36,15 @@ export async function createSubscription(raw: unknown): Promise<SubscribeResult>
     return { status: 'invalid', error: firstError?.message ?? 'Datos inválidos' }
   }
 
-  const { email: rawEmail, productId, productHandle, variantId, productTitle, variantTitle } = parsed.data
+  const {
+    email: rawEmail,
+    productId,
+    productHandle,
+    variantId,
+    inventoryItemId,
+    productTitle,
+    variantTitle,
+  } = parsed.data
   const email = normalizeEmail(rawEmail)
 
   // Validate email format + DNS
@@ -64,6 +73,7 @@ export async function createSubscription(raw: unknown): Promise<SubscribeResult>
         productId,
         productHandle,
         variantId,
+        inventoryItemId,
         productTitle,
         variantTitle,
         status: 'PENDING',
