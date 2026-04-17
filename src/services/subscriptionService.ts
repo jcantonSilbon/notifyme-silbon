@@ -10,7 +10,14 @@ export const SubscribeInputSchema = z.object({
   productId: z.string().min(1).max(64),
   productHandle: z.string().min(1).max(255),
   variantId: z.string().min(1).max(64),
-  inventoryItemId: z.string().min(1).max(64).optional(),
+  inventoryItemId: z.preprocess(
+    (value) => {
+      if (typeof value !== 'string') return value
+      const trimmed = value.trim()
+      return trimmed === '' ? undefined : trimmed
+    },
+    z.string().min(1).max(64).optional(),
+  ),
   productTitle: z.string().min(1).max(255),
   variantTitle: z.string().min(1).max(255),
   honeypot: z.string().max(0, 'Bot detected'), // must be empty string

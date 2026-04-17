@@ -437,11 +437,14 @@
       productId: String(container.dataset.productId || ''),
       productHandle: String(productHandleInput.value || container.dataset.productHandle || ''),
       variantId: String(variantIdInput.value || ''),
-      inventoryItemId: String(inventoryItemIdInput.value || ''),
       productTitle: String(container.dataset.productTitle || productData.title || ''),
       variantTitle: String(variantTitleInput.value || ''),
       honeypot: String(document.getElementById('notify-me-honeypot') && document.getElementById('notify-me-honeypot').value || '')
     };
+
+    if (inventoryItemIdInput.value) {
+      payload.inventoryItemId = String(inventoryItemIdInput.value);
+    }
 
     try {
       var response = await fetch(backendUrl + '/api/subscribe', {
