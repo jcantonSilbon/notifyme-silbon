@@ -28,6 +28,9 @@
   var fallbackLabel = document.getElementById('notify-me-selector-label');
   var fallbackSelect = document.getElementById('notify-me-variant-select');
   var productDataEl = document.getElementById('notify-me-product-data');
+  var triggerTextEl = container.querySelector('.notify-me__trigger-text');
+  var headingEl = document.getElementById('notify-me-title');
+  var emailLabelEl = container.querySelector('label[for="notify-me-email"]');
 
   if (
     !form ||
@@ -45,7 +48,10 @@
     !fallbackWrap ||
     !fallbackLabel ||
     !fallbackSelect ||
-    !productDataEl
+    !productDataEl ||
+    !triggerTextEl ||
+    !headingEl ||
+    !emailLabelEl
   ) {
     return;
   }
@@ -60,6 +66,7 @@
   });
 
   var themeVariantEvents = ['variant:change', 'on:variant:change', 'variantChange'];
+  var locale = getLocale();
   var currentVariant = null;
   var lastThemeVariantId = null;
   var singleVariant = productData.variants.length === 1;
@@ -71,6 +78,19 @@
   var hasUnavailableVariants = productData.variants.some(function (variant) {
     return !variant.available;
   });
+  var copy = {
+    triggerButtonText: triggerTextEl.textContent.trim(),
+    modalTitle: headingEl.textContent.trim(),
+    sizeSelectLabel: 'Selecciona tu talla',
+    emailLabel: emailLabelEl.textContent.trim(),
+    emailPlaceholder: emailInput.getAttribute('placeholder') || 'tu@email.com',
+    submitButtonText: submitBtn.textContent.trim(),
+    successMessage: 'Te avisaremos cuando esté disponible.',
+    selectVariantMessage: 'Selecciona una talla concreta para suscribirte.',
+    invalidEmailMessage: 'Por favor, introduce un email válido.',
+    genericErrorMessage: 'Ha ocurrido un error. Por favor, inténtalo de nuevo.',
+    connectionErrorMessage: 'Error de conexión. Por favor, inténtalo de nuevo.'
+  };
 
   function parseProductData(raw) {
     try {
@@ -78,6 +98,23 @@
     } catch (_error) {
       return null;
     }
+  }
+
+  function getLocale() {
+    var htmlLang = document.documentElement.getAttribute('lang');
+    if (htmlLang) return htmlLang.toLowerCase().split('-')[0];
+    if (window.Shopify && window.Shopify.locale) return String(window.Shopify.locale).toLowerCase();
+    return 'es';
+  }
+
+  function applyCopy(nextCopy) {
+    copy = Object.assign({}, copy, nextCopy || {});
+    triggerTextEl.textContent = copy.triggerButtonText;
+    headingEl.textContent = copy.modalTitle;
+    emailLabelEl.textContent = copy.emailLabel;
+    emailInput.setAttribute('placeholder', copy.emailPlaceholder);
+    submitBtn.textContent = copy.submitButtonText;
+    submitBtn.dataset.originalText = copy.submitButtonText;
   }
 
   function setLoading(loading) {
@@ -260,6 +297,7 @@
   }
 
   function getFallbackPromptText() {
+    if (copy.sizeSelectLabel) return copy.sizeSelectLabel;
     var label = sizeOptionIndex >= 0 ? optionNames[sizeOptionIndex] : 'talla';
     return 'Selecciona tu ' + label;
   }
@@ -453,25 +491,34 @@
     attributeFilter: ['value', 'checked', 'selected', 'disabled', 'class', 'style', 'hidden']
   });
 
+  fetch(backendUrl + '/api/copy?locale=' + encodeURIComponent(locale))
+    .then(function (response) { return response.ok ? response.json() : null; })
+    .then(function (data) {
+      if (data) applyCopy(data);
+    })
+    .catch(function () {
+      // Silent fallback to inline defaults.
+    });
+
   ensureResolvedVariant();
 
   form.addEventListener('submit', async function (event) {
     event.preventDefault();
 
     if (!backendUrl) {
-      showMessage('Error de configuración: falta la URL del backend.', 'error');
+      showMessage(copy.genericErrorMessage, 'error');
       return;
     }
 
     if (!variantIdInput.value) {
-      showMessage('Selecciona una talla concreta para suscribirte.', 'error');
+      showMessage(copy.selectVariantMessage, 'error');
       if (fallbackRequired) fallbackSelect.focus();
       return;
     }
 
     var email = emailInput.value.trim();
     if (!email || !email.includes('@')) {
-      showMessage('Por favor, introduce un email válido.', 'error');
+      showMessage(copy.invalidEmailMessage, 'error');
       emailInput.focus();
       return;
     }
@@ -506,14 +553,14 @@
 
       if (response.ok && data.ok) {
         form.style.display = 'none';
-        showMessage(data.message || 'Te avisaremos cuando esté disponible.', 'success');
+        showMessage(copy.successMessage || data.message || 'Te avisaremos cuando esté disponible.', 'success');
         return;
       }
 
-      showMessage(data.error || 'Ha ocurrido un error. Por favor, inténtalo de nuevo.', 'error');
+      showMessage(data.error || copy.genericErrorMessage, 'error');
       setLoading(false);
     } catch (_error) {
-      showMessage('Error de conexión. Por favor, inténtalo de nuevo.', 'error');
+      showMessage(copy.connectionErrorMessage, 'error');
       setLoading(false);
     }
   });

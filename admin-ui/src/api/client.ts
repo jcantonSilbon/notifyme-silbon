@@ -38,6 +38,23 @@ export interface Stats {
   }[]
 }
 
+export type SupportedLocale = 'es' | 'en' | 'fr' | 'pt'
+
+export interface NotificationCopy {
+  locale: SupportedLocale
+  triggerButtonText: string
+  modalTitle: string
+  sizeSelectLabel: string
+  emailLabel: string
+  emailPlaceholder: string
+  submitButtonText: string
+  successMessage: string
+  selectVariantMessage: string
+  invalidEmailMessage: string
+  genericErrorMessage: string
+  connectionErrorMessage: string
+}
+
 export interface SubscriptionsParams {
   page?: number
   limit?: number
@@ -84,6 +101,17 @@ export const api = {
 
   getStats(): Promise<Stats> {
     return apiFetch<Stats>('/stats')
+  },
+
+  getNotificationCopy(): Promise<{ locales: NotificationCopy[] }> {
+    return apiFetch<{ locales: NotificationCopy[] }>('/copy')
+  },
+
+  saveNotificationCopy(locale: SupportedLocale, payload: Omit<NotificationCopy, 'locale'>): Promise<{ ok: boolean; locale: SupportedLocale }> {
+    return apiFetch<{ ok: boolean; locale: SupportedLocale }>(`/copy/${locale}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    })
   },
 
   retrySubscription(id: string): Promise<{ ok: boolean }> {

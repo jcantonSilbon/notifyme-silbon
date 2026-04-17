@@ -73,3 +73,20 @@ model VariantCache {
 
   @@index([variantId])
 }
+
+model NotificationCopy {
+  locale                 String   @id
+  triggerButtonText      String
+  modalTitle             String
+  sizeSelectLabel        String
+  emailLabel             String
+  emailPlaceholder       String
+  submitButtonText       String
+  successMessage         String
+  selectVariantMessage   String
+  invalidEmailMessage    String
+  genericErrorMessage    String
+  connectionErrorMessage String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}

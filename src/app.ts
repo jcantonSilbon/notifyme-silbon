@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url'
 
 import { config } from './config.js'
 import { subscribeRoute } from './routes/subscribe.js'
+import { copyRoute } from './routes/copy.js'
 import { webhookRoute } from './routes/webhook.js'
 import { cronRoute } from './routes/cron.js'
 import { adminRoutes } from './routes/admin/index.js'
@@ -72,6 +73,7 @@ export async function buildApp() {
   })
 
   await fastify.register(subscribeRoute)
+  await fastify.register(copyRoute)
   await fastify.register(webhookRoute)
   await fastify.register(cronRoute)
   await fastify.register(adminRoutes)

@@ -13,15 +13,16 @@ import {
   Text,
   Divider,
 } from '@shopify/polaris'
-import { HomeIcon, OrderIcon } from '@shopify/polaris-icons'
+import { HomeIcon, OrderIcon, SettingsIcon } from '@shopify/polaris-icons'
 import enTranslations from '@shopify/polaris/locales/en.json'
 import { StatsCards } from './components/StatsCards'
 import { FilterBar } from './components/FilterBar'
 import { SubscriptionTable } from './components/SubscriptionTable'
+import { CopySettingsForm } from './components/CopySettingsForm'
 import { api } from './api/client'
-import type { Stats, SubscriptionsResponse, SubscriptionsParams } from './api/client'
+import type { NotificationCopy, Stats, SubscriptionsResponse, SubscriptionsParams, SupportedLocale } from './api/client'
 
-type View = 'overview' | 'subscriptions'
+type View = 'overview' | 'subscriptions' | 'settings'
 
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('overview')
@@ -32,6 +33,9 @@ export default function App() {
 
   const [subscriptions, setSubscriptions] = useState<SubscriptionsResponse | null>(null)
   const [subsLoading, setSubsLoading] = useState(false)
+  const [copyLocales, setCopyLocales] = useState<NotificationCopy[]>([])
+  const [copyLoading, setCopyLoading] = useState(false)
+  const [copySaving, setCopySaving] = useState(false)
 
   const [filters, setFilters] = useState<SubscriptionsParams>({ page: 1, limit: 50 })
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +66,16 @@ export default function App() {
     if (currentView !== 'subscriptions') return
     loadSubscriptions()
   }, [currentView, loadSubscriptions])
+
+  useEffect(() => {
+    if (currentView !== 'settings') return
+    setCopyLoading(true)
+    api
+      .getNotificationCopy()
+      .then((response) => setCopyLocales(response.locales))
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setCopyLoading(false))
+  }, [currentView])
 
   const handleRetry = async (id: string) => {
     try {
@@ -100,6 +114,24 @@ export default function App() {
     setFilters(newFilters)
   }
 
+  const handleSaveCopy = async (
+    locale: SupportedLocale,
+    payload: Omit<NotificationCopy, 'locale'>,
+  ) => {
+    try {
+      setCopySaving(true)
+      await api.saveNotificationCopy(locale, payload)
+      setCopyLocales((current) =>
+        current.map((item) => (item.locale === locale ? { locale, ...payload } : item)),
+      )
+      setSuccessMessage('Textos guardados correctamente')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar los textos')
+    } finally {
+      setCopySaving(false)
+    }
+  }
+
   const totalPages = subscriptions
     ? Math.ceil(subscriptions.total / (filters.limit ?? 50))
     : 1
@@ -120,6 +152,12 @@ export default function App() {
             onClick: () => setCurrentView('subscriptions'),
             selected: currentView === 'subscriptions',
             badge: stats?.totalPending ? String(stats.totalPending) : undefined,
+          },
+          {
+            label: 'Ajustes',
+            icon: SettingsIcon,
+            onClick: () => setCurrentView('settings'),
+            selected: currentView === 'settings',
           },
         ]}
       />
@@ -215,6 +253,29 @@ export default function App() {
                 </Card>
               </Layout.Section>
             </Layout>
+          </Page>
+        )}
+
+        {currentView === 'settings' && (
+          <Page title="Ajustes" subtitle="Textos del botón y del pop-up por idioma">
+            <BlockStack gap="600">
+              {error && (
+                <Banner tone="critical" onDismiss={() => setError(null)}>
+                  {error}
+                </Banner>
+              )}
+              {successMessage && (
+                <Banner tone="success" onDismiss={() => setSuccessMessage(null)}>
+                  {successMessage}
+                </Banner>
+              )}
+              <CopySettingsForm
+                locales={copyLocales}
+                loading={copyLoading}
+                saving={copySaving}
+                onSave={handleSaveCopy}
+              />
+            </BlockStack>
           </Page>
         )}
       </Frame>
