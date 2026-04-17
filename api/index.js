@@ -1,18 +1,22 @@
 /**
- * Vercel Serverless Function entry point (plain JS — avoids tsc/esbuild type conflicts).
+ * Vercel Serverless Function entry point.
  *
- * Loads from ../dist/ which is pre-built by `npm run build:api` (prisma generate + tsc).
- * All .tsx files are compiled to .js by tsc before this runs, so Node's ESM resolver
- * finds every import as a real .js file — no .tsx lookup needed.
+ * Loads dist/app.bundle.js — a single ESM file produced by esbuild that inlines
+ * all our source code (including BackInStock.tsx, compiled by esbuild natively).
+ * npm packages are kept external (--packages=external) and loaded from node_modules/.
  *
- * vercel.json `includeFiles: "dist/**"` ensures the built output is bundled with the function.
+ * Why a bundle and not tsc output:
+ *   tsc compiles src/email/templates/BackInStock.tsx → dist/.../BackInStock.js but
+ *   @vercel/node's file tracer resolves the import chain back to the src/ tree at
+ *   runtime, where BackInStock.tsx ≠ BackInStock.js → ERR_MODULE_NOT_FOUND.
+ *   esbuild inlines BackInStock at bundle time — no separate file to resolve.
  */
 
 let appPromise = null
 
 function getApp() {
   if (!appPromise) {
-    appPromise = import('../dist/app.js').then((m) => m.buildApp())
+    appPromise = import('../dist/app.bundle.js').then((m) => m.buildApp())
   }
   return appPromise
 }
