@@ -1,56 +1,77 @@
-{% comment %}
-  Notify Me App Block
-  ──────────────────
-  Placed on the product page via the Shopify theme editor (Online Store 2.0).
-  Shows an email subscription form when the currently selected variant is out of stock.
-  Hides automatically when a variant is available (add-to-cart remains the primary CTA).
+{%- comment -%}
+  Notify Me App Block — Silbon Back-in-Stock Notifications
+  ─────────────────────────────────────────────────────────
+  OS 2.0 App Block placed on the product page via the theme editor.
 
-  Settings:
-    - backend_url:   Full URL to the NotifyMe API (e.g. https://notifyme.vercel.app)
-    - button_text:   Label for the submit button
-    - heading_text:  Heading shown above the form
-{% endcomment %}
+  Variant selection strategy:
+    1. ALL variants OOS   → render own selector (theme picker likely hidden)
+    2. SOME variants OOS  → sync with the theme's picker via events / input[name="id"]
+    3. Single variant OOS → auto-select, show form directly
+    4. Variant in stock   → block is hidden; add-to-cart is the CTA
+
+  Subscription is always tied to the exact variantId the user chose.
+{%- endcomment -%}
+
+{%- comment -%} Variant data embedded at render time — no runtime fetch needed {%- endcomment -%}
+<script type="application/json" id="notify-me-product-data">
+{
+  "id": {{ product.id }},
+  "handle": {{ product.handle | json }},
+  "title": {{ product.title | json }},
+  "has_only_default_variant": {{ product.has_only_default_variant | json }},
+  "option_name": {{ product.options.first | json }},
+  "variants": [
+    {%- for variant in product.variants -%}
+    {
+      "id": {{ variant.id }},
+      "title": {{ variant.title | json }},
+      "option1": {{ variant.option1 | json }},
+      "available": {{ variant.available }}
+    }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ]
+}
+</script>
 
 <div
   id="notify-me-container"
   class="notify-me"
   data-backend-url="{{ block.settings.backend_url }}"
   data-product-id="{{ product.id }}"
-  data-variant-id="{{ product.selected_or_first_available_variant.id }}"
   data-product-title="{{ product.title | escape }}"
   data-product-handle="{{ product.handle }}"
-  data-variant-title="{{ product.selected_or_first_available_variant.title | escape }}"
-  data-initially-available="{{ product.selected_or_first_available_variant.available }}"
   style="display: none;"
   aria-live="polite"
 >
   <div class="notify-me__inner">
     <p class="notify-me__heading">{{ block.settings.heading_text }}</p>
 
+    {%- comment -%}
+      Own variant selector.
+      Shown by JS only when the theme selector is not usable.
+      The control is rendered dynamically by notify-me.js and becomes
+      mandatory for multi-variant products without a usable theme picker.
+    {%- endcomment -%}
+    <div id="notify-me-selector-wrap" style="display: none;">
+      <label id="notify-me-selector-label" class="notify-me__selector-label" for="notify-me-variant-select"></label>
+      <select id="notify-me-variant-select" class="notify-me__select"></select>
+    </div>
+
     <form id="notify-me-form" class="notify-me__form" novalidate>
-      {%- comment -%}Honeypot: hidden field to catch bots. Must remain empty.{%- endcomment -%}
+      {%- comment -%} Honeypot — must remain empty {%- endcomment -%}
       <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
         <label for="notify-me-honeypot">Leave this empty</label>
-        <input
-          type="text"
-          id="notify-me-honeypot"
-          name="honeypot"
-          tabindex="-1"
-          autocomplete="off"
-          value=""
-        />
+        <input type="text" id="notify-me-honeypot" name="honeypot" tabindex="-1" autocomplete="off" value="" />
       </div>
 
-      <input type="hidden" id="notify-me-product-id" name="productId" value="{{ product.id }}" />
+      <input type="hidden" id="notify-me-product-id"     name="productId"     value="{{ product.id }}" />
       <input type="hidden" id="notify-me-product-handle" name="productHandle" value="{{ product.handle }}" />
-      <input type="hidden" id="notify-me-variant-id" name="variantId" value="{{ product.selected_or_first_available_variant.id }}" />
-      <input type="hidden" id="notify-me-product-title" name="productTitle" value="{{ product.title | escape }}" />
-      <input type="hidden" id="notify-me-variant-title" name="variantTitle" value="{{ product.selected_or_first_available_variant.title | escape }}" />
+      <input type="hidden" id="notify-me-variant-id"     name="variantId"     value="" />
+      <input type="hidden" id="notify-me-product-title"  name="productTitle"  value="{{ product.title | escape }}" />
+      <input type="hidden" id="notify-me-variant-title"  name="variantTitle"  value="" />
 
       <div class="notify-me__field-group">
-        <label for="notify-me-email" class="notify-me__label">
-          Email
-        </label>
+        <label for="notify-me-email" class="notify-me__label">Email</label>
         <input
           type="email"
           id="notify-me-email"
@@ -72,14 +93,12 @@
       </button>
     </form>
 
-    <div id="notify-me-message" class="notify-me__message" role="alert" aria-live="assertive" style="display:none;"></div>
+    <div id="notify-me-message" class="notify-me__message" role="alert" aria-live="assertive" style="display: none;"></div>
   </div>
 </div>
 
 <style>
-  .notify-me {
-    margin-top: 1rem;
-  }
+  .notify-me { margin-top: 1rem; }
 
   .notify-me__inner {
     padding: 1.25rem;
@@ -95,6 +114,32 @@
     color: rgb(var(--color-foreground));
   }
 
+  /* ── Own variant selector ── */
+  .notify-me__selector-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(var(--color-foreground));
+  }
+
+  .notify-me__select {
+    width: 100%;
+    margin-bottom: 0.875rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: var(--inputs-radius, 4px);
+    background: rgb(var(--color-background));
+    color: rgb(var(--color-foreground));
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .notify-me__select:focus {
+    outline: 2px solid rgb(var(--color-foreground));
+    outline-offset: 2px;
+  }
+
+  /* ── Form ── */
   .notify-me__form {
     display: flex;
     flex-direction: column;
@@ -128,12 +173,10 @@
     outline-offset: 2px;
   }
 
-  .notify-me__button {
-    cursor: pointer;
-  }
+  .notify-me__button { cursor: pointer; }
 
   .notify-me__button:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -184,6 +227,6 @@
       "label": "Texto del botón",
       "default": "Avisarme"
     }
-  ],
+  ]
 }
 {% endschema %}
