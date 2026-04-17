@@ -53,8 +53,12 @@
     aria-controls="notify-me-modal"
     aria-expanded="false"
   >
-    <span class="notify-me__trigger-icon" aria-hidden="true">●</span>
-    <span>{{ block.settings.button_text }}</span>
+    <span class="notify-me__trigger-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+        <path d="M12 3a4 4 0 0 0-4 4v1.2c0 .9-.3 1.8-.9 2.5L5.7 12a1 1 0 0 0 .8 1.7h11a1 1 0 0 0 .8-1.7l-1.4-1.3a3.8 3.8 0 0 1-.9-2.5V7a4 4 0 0 0-4-4Zm0 18a2.7 2.7 0 0 0 2.5-1.7h-5A2.7 2.7 0 0 0 12 21Z" fill="currentColor"/>
+      </svg>
+    </span>
+    <span class="notify-me__trigger-text">AVISAR POR EMAIL</span>
   </button>
 
   <div id="notify-me-modal" class="notify-me__modal" style="display: none;" aria-hidden="true">
@@ -132,21 +136,23 @@
   }
 
   .notify-me__trigger {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
     width: 100%;
-    min-height: 2.875rem;
-    padding: 0.875rem 1rem;
+    min-height: 2.75rem;
+    padding: 0.95rem 1rem;
     border: 1px solid rgb(var(--color-foreground));
     border-radius: 0;
     background: transparent;
     color: rgb(var(--color-foreground));
-    font-size: 0.9375rem;
-    font-weight: 600;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
+    text-transform: uppercase;
   }
 
   .notify-me__trigger:hover {
@@ -158,9 +164,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1rem;
-    height: 1rem;
-    font-size: 0.625rem;
+    width: 1.125rem;
+    height: 1.125rem;
+    flex: 0 0 auto;
+  }
+
+  .notify-me__trigger-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .notify-me__trigger-text {
+    line-height: 1;
   }
 
   .notify-me__modal {
