@@ -152,6 +152,43 @@ export async function notifyVariantSubscribers(variantId: string): Promise<{
   return { processed: subscriptions.length, ...result }
 }
 
+export async function notifySubscriptionIds(subscriptionIds: string[]): Promise<{
+  processed: number
+  succeeded: number
+  failed: number
+}> {
+  if (subscriptionIds.length === 0) {
+    return { processed: 0, succeeded: 0, failed: 0 }
+  }
+
+  const claimedRows = await prisma.$queryRaw<Array<{ id: string }>>(
+    Prisma.sql`
+      UPDATE "Subscription"
+      SET "processingAt" = NOW()
+      WHERE "id" IN (${Prisma.join(subscriptionIds)})
+        AND status = 'PENDING'::"SubscriptionStatus"
+        AND (
+          "processingAt" IS NULL
+          OR "processingAt" < NOW() - (${PROCESSING_TIMEOUT_MINUTES} || ' minutes')::INTERVAL
+        )
+      RETURNING id
+    `,
+  )
+
+  if (claimedRows.length === 0) {
+    return { processed: 0, succeeded: 0, failed: 0 }
+  }
+
+  const ids = claimedRows.map((row) => row.id)
+  const subscriptions = await prisma.subscription.findMany({
+    where: { id: { in: ids } },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  const result = await notifyBatch(subscriptions)
+  return { processed: subscriptions.length, ...result }
+}
+
 /**
  * Retries subscriptions that previously failed to send.
  * Uses the same atomic claim pattern as notifyVariantSubscribers to prevent
