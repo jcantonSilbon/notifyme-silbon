@@ -1,6 +1,7 @@
 import { prisma } from '../db.js'
 import { Prisma } from '@prisma/client'
 import { sendBackInStockEmail } from '../email/sender.js'
+import { fetchProductImageUrl } from '../shopify.js'
 import { config } from '../config.js'
 import { logger } from '../utils/logger.js'
 
@@ -43,6 +44,13 @@ async function notifyBatch(
   let succeeded = 0
   let failed = 0
 
+  // Pre-fetch product images for all unique productIds in this batch (avoids N API calls for same product)
+  const uniqueProductIds = [...new Set(subscriptions.map((s) => s.productId))]
+  const productImageMap: Record<string, string | null> = {}
+  for (const productId of uniqueProductIds) {
+    productImageMap[productId] = await fetchProductImageUrl(productId)
+  }
+
   for (const sub of subscriptions) {
     try {
       const productUrl = buildProductUrl(sub.productHandle, sub.variantId)
@@ -54,6 +62,7 @@ async function notifyBatch(
         productUrl,
         productId: sub.productId,
         variantId: sub.variantId,
+        productImageUrl: productImageMap[sub.productId],
       })
 
       await prisma.subscription.update({

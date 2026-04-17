@@ -14,6 +14,7 @@ interface SendBackInStockEmailParams {
   productUrl: string
   productId: string
   variantId: string
+  productImageUrl?: string | null
 }
 
 /**
@@ -21,7 +22,8 @@ interface SendBackInStockEmailParams {
  * Throws on failure — caller is responsible for retry logic.
  */
 export async function sendBackInStockEmail(params: SendBackInStockEmailParams): Promise<void> {
-  const { to, productTitle, variantTitle, productUrl, productId, variantId } = params
+  const { to, productTitle, variantTitle, productUrl, productId, variantId, productImageUrl } =
+    params
 
   const html = await render(
     React.createElement(BackInStockEmail, {
@@ -30,6 +32,7 @@ export async function sendBackInStockEmail(params: SendBackInStockEmailParams): 
       productUrl,
       productId,
       variantId,
+      productImageUrl: productImageUrl ?? undefined,
     }),
   )
 

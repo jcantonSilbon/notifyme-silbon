@@ -19,7 +19,12 @@ interface BackInStockEmailProps {
   productUrl: string
   productId: string
   variantId: string
+  productImageUrl?: string
 }
+
+// Silbon logo — hosted on Shopify CDN (update URL if logo changes)
+const SILBON_LOGO_URL =
+  'https://cdn.shopify.com/s/files/1/0794/1311/7206/files/logo-white_1_f8df1422-4a24-45c5-a6d6-fa4d060ed16f.png?v=1695205783'
 
 export function BackInStockEmail({
   productTitle,
@@ -27,6 +32,7 @@ export function BackInStockEmail({
   productUrl,
   productId: _productId,
   variantId: _variantId,
+  productImageUrl,
 }: BackInStockEmailProps) {
   return (
     <Html lang="es">
@@ -39,8 +45,8 @@ export function BackInStockEmail({
           {/* Logo */}
           <Section style={logoSectionStyle}>
             <Img
-              src="https://cdn.shopify.com/s/files/1/silbon-logo.png"
-              width="120"
+              src={SILBON_LOGO_URL}
+              width="110"
               height="auto"
               alt="Silbon"
               style={logoStyle}
@@ -48,6 +54,19 @@ export function BackInStockEmail({
           </Section>
 
           <Hr style={hrStyle} />
+
+          {/* Product image */}
+          {productImageUrl && (
+            <Section style={productImageSectionStyle}>
+              <Img
+                src={productImageUrl}
+                width="600"
+                height="auto"
+                alt={productTitle}
+                style={productImageStyle}
+              />
+            </Section>
+          )}
 
           {/* Main content */}
           <Section style={contentStyle}>
@@ -113,7 +132,7 @@ const containerStyle: React.CSSProperties = {
 }
 
 const logoSectionStyle: React.CSSProperties = {
-  padding: '32px 40px 24px',
+  padding: '28px 40px 20px',
   textAlign: 'left' as const,
 }
 
@@ -125,6 +144,19 @@ const hrStyle: React.CSSProperties = {
   borderColor: '#e5e5e5',
   borderWidth: '1px',
   margin: '0',
+}
+
+const productImageSectionStyle: React.CSSProperties = {
+  padding: '0',
+  lineHeight: '0',
+}
+
+const productImageStyle: React.CSSProperties = {
+  display: 'block',
+  width: '100%',
+  maxWidth: '600px',
+  height: 'auto',
+  objectFit: 'cover' as const,
 }
 
 const contentStyle: React.CSSProperties = {

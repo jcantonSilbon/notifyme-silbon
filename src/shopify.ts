@@ -53,6 +53,25 @@ export async function fetchProductTitle(productId: string): Promise<string> {
 }
 
 /**
+ * Fetch a product's first image URL from the Shopify Admin REST API.
+ * Returns null if the product has no images or the API call fails.
+ */
+export async function fetchProductImageUrl(productId: string): Promise<string | null> {
+  try {
+    const client = new shopify.clients.Rest({ session: shopifySession })
+    const response = await client.get<{
+      product: { id: number; image: { src: string } | null }
+    }>({
+      path: `products/${productId}`,
+      query: { fields: 'id,image' },
+    })
+    return response.body.product.image?.src ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Resolves an inventory_item_id to its variant using
  * GET variants.json?inventory_item_ids={id}.
  *
