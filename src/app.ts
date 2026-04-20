@@ -45,15 +45,27 @@ export async function buildApp() {
     },
   )
 
+  // Allow any Shopify storefront, theme editor preview, and local dev
+  const allowedOriginPattern =
+    /^https:\/\/([\w-]+\.)?(myshopify\.com|shopifypreview\.com|silbonshop\.com|silbon\.com)(:\d+)?$/
+
   await fastify.register(cors, {
-    origin: [
-      'https://silbon.com',
-      'https://silbon.myshopify.com',
-      'https://silbon-staging-v2.myshopify.com',
-      ...(config.NODE_ENV === 'development'
-        ? ['http://localhost:3000', 'http://localhost:5173']
-        : []),
-    ],
+    origin: (origin, callback) => {
+      if (!origin) {
+        // Server-to-server or same-origin — allow
+        callback(null, true)
+        return
+      }
+      if (
+        allowedOriginPattern.test(origin) ||
+        (config.NODE_ENV === 'development' &&
+          /^https?:\/\/localhost(:\d+)?$/.test(origin))
+      ) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'), false)
+      }
+    },
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: false,

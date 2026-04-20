@@ -434,7 +434,10 @@
     if (target === fallbackSelect) {
       var selectedFallbackVariant = getVariantById(target.value);
       applyVariant(selectedFallbackVariant, 'fallback');
-      syncThemeInputs(selectedFallbackVariant);
+      // Note: do NOT call syncThemeInputs here — the fallback selector exists
+      // precisely when the theme has no usable variant picker, so dispatching
+      // a change event on the theme's hidden master input would trigger broken
+      // theme machinery (e.g. VariantPicker calling window.productAvailabilityModal).
       return;
     }
 
