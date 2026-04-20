@@ -45,14 +45,16 @@ export async function buildApp() {
     },
   )
 
-  // Allow any Shopify storefront, theme editor preview, and local dev
+  // Allow any Shopify storefront, theme editor preview, the app's own Vercel
+  // domain (Vite dynamic imports send Origin even for same-origin requests),
+  // and local dev.
   const allowedOriginPattern =
-    /^https:\/\/([\w-]+\.)?(myshopify\.com|shopifypreview\.com|silbonshop\.com|silbon\.com)(:\d+)?$/
+    /^https:\/\/([\w-]+\.)?(myshopify\.com|shopifypreview\.com|silbonshop\.com|silbon\.com|vercel\.app)(:\d+)?$/
 
   await fastify.register(cors, {
     origin: (origin, callback) => {
       if (!origin) {
-        // Server-to-server or same-origin — allow
+        // Server-to-server / plain navigation — allow
         callback(null, true)
         return
       }
@@ -63,7 +65,9 @@ export async function buildApp() {
       ) {
         callback(null, true)
       } else {
-        callback(new Error('Not allowed by CORS'), false)
+        // Use null (not an Error) so @fastify/cors returns 204/no headers
+        // instead of propagating a 500.
+        callback(null, false)
       }
     },
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
