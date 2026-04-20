@@ -32,7 +32,7 @@ const envSchema = z.object({
 
   // URLs
   APP_URL: z.string().url().default('http://localhost:3000'),
-  STORE_URL: z.string().url().default('https://silbon.com'),
+  STORE_URL: z.string().url().default('https://www.silbonshop.com'),
 
   // Server
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),

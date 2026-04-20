@@ -4,17 +4,23 @@ import { config } from '../config.js'
 
 /**
  * Bearer token authentication for admin API routes.
+ * Accepts token via Authorization header (API calls) or ?token= query param
+ * (browser downloads like CSV export where headers cannot be set).
  * Uses timingSafeEqual to prevent timing oracle attacks.
  */
 export async function adminAuth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
   const authHeader = request.headers.authorization
+  const queryToken = (request.query as Record<string, string>).token
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const token = authHeader?.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : queryToken ?? ''
+
+  if (!token) {
     await reply.status(401).send({ error: 'Unauthorized' })
     return
   }
 
-  const token = authHeader.slice(7)
   const expected = config.ADMIN_TOKEN
 
   // Reject immediately if lengths differ (timingSafeEqual requires equal-length buffers)

@@ -97,9 +97,9 @@ export function BackInStockEmail({
           {/* Footer */}
           <Section style={footerStyle}>
             <Text style={footerTextStyle}>
-              Recibiste este email porque te suscribiste a las notificaciones de restock en{' '}
-              <a href="https://silbon.com" style={footerLinkStyle}>
-                silbon.com
+              Recibiste este correo porque solicitaste ser avisado cuando este producto volviera a estar disponible en{' '}
+              <a href="https://www.silbonshop.com" style={footerLinkStyle}>
+                silbonshop.com
               </a>
               .
             </Text>
